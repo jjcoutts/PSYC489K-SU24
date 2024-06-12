@@ -1,0 +1,241 @@
+---
+title: "PSYC489K, Session 3: Multiple Mediation Analysis"
+format: html
+editor: visual
+---
+
+# Multiple Mediation
+
+Multiple mediation analysis allows us to discover more complex mechanisms and/or multiple mechanisms by which *X* affects *Y*. Mathematically, multiple mediation generalizes well from simple mediation. (It's just more equations and/or more variables in the equations.) There are two types of multiple mediator models: parallel (where the mediators can correlated with one another) and serial (where the mediators causally influence each other). We also learned how to control for covariates and will be doing so today.
+
+**Parallel Mediation Equations**
+
+It is actually quite simple to test for parallel mediation. You need an equation for each mediator and to put all mediators in the equation for *Y*. For example, with two mediators, the equations are:
+
+M1 = d_m1 + a_1\*X
+
+M2 = d_m2 + a_2\*X
+
+Y = d_Y + c'\*X + b_1\*M_1 + b_2\*M_2
+
+The specific indirect effect of X on Y through M_1 (controlling for M_2) is a_1\*b_1. The specific indirect effect of *X* on *Y* through M_2 (controlling for M_1) is a_2\*b_2. The **total indirect effect of *X* on *Y***is the sum of these, a_1\*b_1 + a_2\*b_2. Adding this to c' will give you the total effect, which is Y regressed on X alone.
+
+Fitting such a model in PROCESS is easy. We can do it with the following code (assuming the variable names are X, M1, M2, and Y, and the data frame they are stored in is called df):\
+process(data = df, x = "X", m = c("M1","M2"), y = "Y", model = 4). Remember: model = 4 applies to simple mediation models and parallel mediation models. We can set the seed by adding the **seed = NUMBER** command, which will help us reproduce the results if we run the code again.
+
+**Serial Mediation Equations**
+
+Serial mediation is a bit more complicated. To conduct this test, you have an equation for each mediator again (and all mediators entered in the equation for the outcome), but you also have all prior mediators entered in the equation(s) for mediators later in the causal chain. For example, with two mediators, the equations are:
+
+M_1 = d_M1 + a_1\*X
+
+M_2 = d_M2 + a_2\*X + i\*M1
+
+Y = d_Y + c'\*X + b_1\*M_1 + b_2\*M_2
+
+The specific indirect effect of X on Y through M_1 (controlling for M_2) is a_1\*b_1. The specific indirect effect of *X* on *Y* through M_2 (controlling for M_1) is a_2\*b_2. The specific indirect effect through M_1 and M_2 is a_1\*i\*b_2. The **total indirect effect of *X* on *Y*** is the sum of all these, a_1\*b_1 + a_2\*b_2 + a_1\*i\*b_2. Adding this to c' will give you the total effect, which is Y regressed on X alone.
+
+Fitting such a model in PROCESS is easy. We can do it with the following code (assuming the variable names are X, M1, M2, and Y, and the data frame they are stored in is called df):\
+process(data = df, x = "X", m = c("M1","M2"), y = "Y", model = 6). model = 6 tells PROCESS we want a serial mediation model. It will assume the order we enter the variables in the m = c() command is the order of the chain (i.e., X-\>M1-\>M2-\>Y). We can set the seed by adding the **seed = NUMBER** command, which will help us reproduce the results if we run the code again.
+
+**Comparing Indirect Effects**
+
+One of the biggest strengths of multiple mediation models is the ability to compare specific indirect effects. This allows us to determine whether indirect effects are "stronger" than another. This is very easy to do, either manually in our bootstrapping algorithm, or even easier in PROCESS.
+
+If the indirect effects are the same sign, simply take the raw difference of the indirect effects. If the indirect effects are of different signs, you should take the difference of absolute values or compute the sum of the indirect effects.
+
+Simply add the **contrast = 1** command to compare indirect effects using the **raw difference** and **contrast = 2** to compared indirect effects using the **difference of absolute values**.
+
+## Load required packages
+
+You should load the jtools and ggplot2 packages. Be sure to also load PROCESS. (The code below will let my computer know where the process.R file is stored so it can manually retrieve and run the file while rendering. It will generate an error otherwise.)
+
+```{r}
+library(jtools)
+library(ggplot2)
+source("E:/Macros/PROCESS/PROCESS v4.3 for R/process.R")
+```
+
+## Read in and summarize the data
+
+Our dataset today comes from a study on war veterans and their development of posttraumatic stress disorder (PTSD) returning home from deployment (Pitts et al., 2018). (This is the same data from last week.) The variables in this dataset are:
+
+-   ptsd: Self-reported PTSD symptomatology, higher scores = more PTSD (Range: -12.21, 70.52)
+
+-   dep: Self-reported depression levels, higher scores = more depression (Range: -9.642, 23.315)
+
+-   combat: Higher scores indicate more exposure to traumatic combat experiences (Range: -5.502, 26.033)
+
+-   pthreat: Perceived threat to life and concerns about safety, higher scores = more threat (Range: 11.92, 72.98)
+
+-   viewofd: Perceived benefits of deployment, higher score = more benefits (Range: 6.738, 38.779)
+
+-   sociald: Social desirability, higher score = greater inclination to appear socially desirable (Range: 0.0471, 17.495)
+
+Read in and summarize the data.
+
+```{r}
+warvet <- read.table(file = "E:/Teaching Materials/PSYC489K (MedMod)/Datasets/ptsd_vet.csv", sep = ",", header = TRUE)
+
+# now summarize the data
+summary(warvet)
+```
+
+## Model Prep
+
+Say we interested in determining whether traumatic experiences during combat (COMBAT) increased PTSD (PTSD), at least in part because they increased perceived threats to life (PTHREAT) and also increased perceived benefits of deployment (VIEWOFD). We also want to control for socially desirable response tendencies (SOCIALD).
+
+## Parallel Mediation Model
+
+First, we will fit the model with the mediators in parallel. This means we will control for the correlation between perceived benefits of deployment and perceived threats of life (while also controlling for social desirability). By doing this, we are also assuming that neither of these variables causes the other. First, fit this model (either manually or in PROCESS). Also produce the appropriate contrasts between the specific indirect effects.
+
+```{r}
+##### manually 
+# set bootstrap parameters
+B = 5000 # number of resamples
+set.seed(1000) # set seed to reproduce results
+pind1_res <- rep(NA, B) # empty results vector for IE 1
+pind2_res <- rep(NA,B) # empty results vector for for IE 2 
+contrast_res <- rep(NA, B) # empty contrast vector
+n <- nrow(warvet) # set sample size
+
+# bootstrapping
+for(i in 1:B){
+  boot_dat <- warvet[sample(1:n, n, replace = TRUE),]
+  boot_a1 <- coef(lm(pthreat ~ combat + sociald, data=boot_dat))["combat"]
+  boot_a2 <- coef(lm(viewofd ~ combat + sociald, data=boot_dat))["combat"]
+  boot_b1 <- coef(lm(ptsd ~ combat + pthreat + viewofd + sociald, data=boot_dat))["pthreat"]
+  boot_b2 <- coef(lm(ptsd ~ combat + pthreat + viewofd + sociald, data=boot_dat))["viewofd"]
+  pind1_res[i] <- boot_a1*boot_b1 # ie through threat
+  pind2_res[i] <- boot_a2*boot_b2 # ie through benefits
+  contrast_res[i] <- abs(pind1_res[i])-abs(pind2_res[i]) # threat minus benefits
+}
+
+# create and print CIs
+paste("The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"); quantile(pind1_res, c(.025, .975))
+paste("The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"); quantile(pind2_res, c(.025, .975))
+paste("The 95% percentile bootstrap CI for the difference between the two indirect effects is:"); quantile(contrast_res, c(.025, .975))
+
+##### process 
+process(data = warvet, x = "combat", y = "ptsd", m = c("pthreat","viewofd"), cov="sociald", model = 4,contrast=2, seed = 42, total = 1,progress=0)
+```
+
+**Report the results of this model. What can we say about the indirect effects individually?**
+
+There was an overall effect of combat on PTSD symptoms, controlling for social desirability (*c* = 0.43, t = 3.73, p \< .001). Those who experienced more traumatic events in combat perceived significantly more threats to their life, holding social desirability constant (a_1 = 0.69, t = 7.56, p \<. 001). They also perceived more benefits to their deployment (a_2 = 0.72, t = 6.53, p \< .001). As one perceived more threats to their life, they reported more PTSD symptoms (b1 = 0.23, t = 3.41, p \< .001) controlling for combat experiences and social desirability. For people equal on combat experiences, perceived threat, and social desirability, the more benefits from deployment one perceived, the fewer PTSD symptoms they had (b2 = -0.38, t = -3.17, p = .002). After accounting for all the mechanisms above, there was still a significant effect of perceived threat on PTSD symptoms (c'= 0.34, t = 3.41, p = .007).
+
+**Which contrast should we conduct? What are the results of this test?**
+
+We should use the difference of absolute values (contrast = 2 in PROCESS) or compute the sum of the indirect effects since they are of different signs. If we simply computed the raw difference between the indirect effects, we would not be comparing their magnitude/distance from zero since one is positive and one is negative.
+
+The result of the contrast is: \|0.1621\|-\|-0.0717\|=0.0904, 95% percentile bootstrap CI = \[-0.042, 0.232\]. We cannot conclude these two indirect effects are different in magnitude from one another because 0 is in the confidence interval.
+
+## Serial Mediation Model
+
+Now, we will fit the model with the mediators in serial. This means we are assuming one of the mediators is causing the other after being caused by the predictor (while controlling for social desirability). First, fit this model (either manually or in PROCESS). Consider which mediator should be in which position and be prepared to justify your response. Also produce the contrasts between the specific indirect effects.
+
+```{r}
+##### manually 
+# set bootstrap parameters
+B = 5000 # number of resamples
+set.seed(1000) # allows us to reproduce results 
+pind1_res <- rep(NA, B) # indirect effect 1 results vector
+pind2_res <- rep(NA,B) # indirect effect 2 results vector
+pind3_res <- rep(NA,B) # indirect effect 3 results vector
+contrast_13_res <- rep(NA, B) # contrast 1 results vector
+contrast_12_res <- rep(NA, B) # contrast 2 results vector
+contrast_23_res <- rep(NA, B) # contrast 3 results vector
+n <- nrow(warvet) # set sample size
+
+# bootstrapping
+for(i in 1:B){
+  boot_dat <- warvet[sample(1:n, n, replace = TRUE),]
+  boot_a1 <- coef(lm(pthreat ~ combat + sociald, data=boot_dat))["combat"]
+  boot_a2 <- coef(lm(viewofd ~ combat + sociald + pthreat, data=boot_dat))["combat"]
+  boot_i <- coef(lm(viewofd ~ combat + sociald + pthreat, data=boot_dat))["pthreat"]
+  boot_b1 <- coef(lm(ptsd ~ combat + pthreat + viewofd + sociald, data=boot_dat))["pthreat"]
+  boot_b2 <- coef(lm(ptsd ~ combat + pthreat + viewofd + sociald, data=boot_dat))["viewofd"]
+  pind1_res[i] <- boot_a1*boot_b1 # ie through threat
+  pind2_res[i] <- boot_a2*boot_b2 # ie through benefits
+  pind3_res[i] <- boot_a1*boot_i*boot_b2 # serial IE
+  contrast_13_res[i] <- pind1_res[i]-pind3_res[i] # threat minus serial IE
+  contrast_12_res[i] <- abs(pind1_res[i])-abs(pind2_res[i]) # benefits minus threat
+  contrast_23_res[i] <- abs(pind2_res[i])-abs(pind3_res[i]) # benefits minus serial IE
+}
+
+### create and print CIs
+### specific IEs
+paste("The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"); quantile(pind1_res, c(.025, .975))
+paste("The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"); quantile(pind2_res, c(.025, .975))
+paste("The 95% percentile bootstrap CI for the serial indirect effect is:"); quantile(pind3_res, c(.025, .975))
+
+### contrasts
+paste("The 95% percentile bootstrap CI for the difference between the effect through threats and the serial indirect effect is:"); quantile(contrast_13_res, c(.025, .975))
+paste("The 95% percentile bootstrap CI for the difference in absolute values between the effect through threats to life and benefits of deployment is:"); quantile(contrast_12_res, c(.025, .975))
+paste("The 95% percentile bootstrap CI for the difference in aboslute values between the effect through benefits and the serial indirect effect is:"); quantile(contrast_23_res, c(.025, .975))
+
+
+process(data=warvet, x = "combat", m = c("pthreat","viewofd"), y = "ptsd", cov = "sociald", model = 6, seed = 42, contrast = 2, total = 1,progress=0)
+```
+
+**Which mediator did you put first and second? Why?**
+
+I chose to put perceived threats to live first. To me, it seems plausible that the more threats to their life one perceives, the fewer benefits they will find to being deployed. This will, in turn, increase their PTSD symptoms. (There is no clear answer to this question. Since we don't know the truth, it's based on your argument. That's not to say there aren't *poor* answers, but you can argue against this position and *potentially* be right.)
+
+**Report the results of this model. What can we say about the indirect effects individually?**
+
+There was an overall effect of combat on PTSD symptoms, controlling for social desirability (*c* = 0.43, t = 3.73, p \< .001). Those who experienced more traumatic events in combat perceived significantly more threats to their life, holding social desirability constant (a_1 = 0.69, t = 7.56, p \<. 001). They also perceived more benefits to their deployment assuming they have the same social desirability (a_2 = 0.28, t = 5.04, p \<. 001). As one perceived more threats to their life, they perceived significantly *fewer* benefits of their deployment (i = -0.13, t = -4.23, p \<. 001) and more PTSD symptoms (b1 = 0.23, t = 3.41, p \<. 001) controlling for combat experiences and social desirability. For people equal on combat experiences, perceived threat, and social desirability, the more benefits from deployment one perceived, the fewer PTSD symptoms they had (b_2 = -0.38, t = -3.17, p = . 002). After accounting for all the mechanisms above, there was still a significant effect of perceived threat on PTSD symptoms (c'= 0.34, t = 3.41, p = .007).
+
+**Which contrast(s) should we conduct? What are the results of this test?**
+
+For indirect effects 1 and 3 (the effect through perceived threats alone and perceived threats then perceived benefits, respectively), we would use the raw difference because they are the same sign. However, we should use the difference of absolute values or the sum for the contrast between the effect through perceived benefits alone to the other two because the effect through benefits is negative, whereas the others are positive. The results are below:
+
+Note: Ind 1 = effect through perceived threat alone, Ind2 = effect through perceived benefits alone, Ind3 = effect through perceived threat *then* benefits.
+
+Ind1 - Ind2 = 0.06, 95% percentile bootstrap CI = \[-0.09, 0.20\]. CONTRAST = 2 in PROCESS
+
+Ind1 - Ind3 = 0.13, 95% percentile bootstrap CI = \[0.02, 0.25\]. CONTRAST = 1 in PROCESS
+
+Ind2 - Ind3 = 0.07, 95% percentile bootstrap CI = \[0.02, 0.13\]. CONTRAST = 2 in PROCESS
+
+The effect through perceived threat alone is significantly stronger than the indirect effect through threat then benefits of deployment (because the confidence interval for the difference did not contain zero). The effect through perceived benefits of deployment was also significantly stronger than the indirect effect through perceived threat then benefits because zero was not in that confidence interval. However, the effect through perceived benefits alone was not different from the effect through perceived threat alone.
+
+## Model Selection
+
+Which model is better? Why? You may consider statistical results in this evaluation, but recall that theory is more important.
+
+I believe that the parallel mediation model is better for a few reasons: 1.) I provided an argument for putting perceived threat first, but it can just as well be the case that those who perceive more benefits from their deployment perceive fewer threats to their life, which decreases PTSD. Without prior research positioning these variables, it's hard to compare these two models. 2.) The parallel mediation model is easier to understand, and parsimony is a good tie breaker.
+
+## Data Visualization
+
+Visualize each path of your chosen model.
+
+```{r}
+# a1
+ggplot(data= warvet, aes(x= combat, y =pthreat)) + 
+  geom_point() + 
+  jtools::theme_apa()
+
+# b1
+ggplot(data= warvet, aes(x=pthreat, y = ptsd)) + 
+  geom_point() + 
+  jtools::theme_apa()
+
+# a2
+ggplot(data= warvet, aes(x=combat, y = viewofd)) + 
+  geom_point() + 
+  jtools::theme_apa()
+
+# b2
+ggplot(data= warvet, aes(x=viewofd, y = ptsd)) + 
+  geom_point() + 
+  jtools::theme_apa()
+```
+
+## Statistical Diagram
+
+Create a complete statistical diagram with all pertinent information (paths, *p*-values, scatterplots). Make this ready for production.
+
+This is available on ELMS!
+
+End of script

@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.353">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+
+<title>PSYC489K, Session 3: Multiple Mediation Analysis</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="mediation_script_sync_session_3_COMPLETE_files/libs/clipboard/clipboard.min.js"></script>
+<script src="mediation_script_sync_session_3_COMPLETE_files/libs/quarto-html/quarto.js"></script>
+<script src="mediation_script_sync_session_3_COMPLETE_files/libs/quarto-html/popper.min.js"></script>
+<script src="mediation_script_sync_session_3_COMPLETE_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="mediation_script_sync_session_3_COMPLETE_files/libs/quarto-html/anchor.min.js"></script>
+<link href="mediation_script_sync_session_3_COMPLETE_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="mediation_script_sync_session_3_COMPLETE_files/libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="mediation_script_sync_session_3_COMPLETE_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="mediation_script_sync_session_3_COMPLETE_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="mediation_script_sync_session_3_COMPLETE_files/libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="fullcontent">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">PSYC489K, Session 3: Multiple Mediation Analysis</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+</header>
+
+<section id="multiple-mediation" class="level1">
+<h1>Multiple Mediation</h1>
+<p>Multiple mediation analysis allows us to discover more complex mechanisms and/or multiple mechanisms by which <em>X</em> affects <em>Y</em>. Mathematically, multiple mediation generalizes well from simple mediation. (It’s just more equations and/or more variables in the equations.) There are two types of multiple mediator models: parallel (where the mediators can correlated with one another) and serial (where the mediators causally influence each other). We also learned how to control for covariates and will be doing so today.</p>
+<p><strong>Parallel Mediation Equations</strong></p>
+<p>It is actually quite simple to test for parallel mediation. You need an equation for each mediator and to put all mediators in the equation for <em>Y</em>. For example, with two mediators, the equations are:</p>
+<p>M1 = d_m1 + a_1*X</p>
+<p>M2 = d_m2 + a_2*X</p>
+<p>Y = d_Y + c’*X + b_1*M_1 + b_2*M_2</p>
+<p>The specific indirect effect of X on Y through M_1 (controlling for M_2) is a_1*b_1. The specific indirect effect of <em>X</em> on <em>Y</em> through M_2 (controlling for M_1) is a_2*b_2. The <strong>total indirect effect of <em>X</em> on <em>Y</em></strong>is the sum of these, a_1*b_1 + a_2*b_2. Adding this to c’ will give you the total effect, which is Y regressed on X alone.</p>
+<p>Fitting such a model in PROCESS is easy. We can do it with the following code (assuming the variable names are X, M1, M2, and Y, and the data frame they are stored in is called df):<br>
+process(data = df, x = “X”, m = c(“M1”,“M2”), y = “Y”, model = 4). Remember: model = 4 applies to simple mediation models and parallel mediation models. We can set the seed by adding the <strong>seed = NUMBER</strong> command, which will help us reproduce the results if we run the code again.</p>
+<p><strong>Serial Mediation Equations</strong></p>
+<p>Serial mediation is a bit more complicated. To conduct this test, you have an equation for each mediator again (and all mediators entered in the equation for the outcome), but you also have all prior mediators entered in the equation(s) for mediators later in the causal chain. For example, with two mediators, the equations are:</p>
+<p>M_1 = d_M1 + a_1*X</p>
+<p>M_2 = d_M2 + a_2*X + i*M1</p>
+<p>Y = d_Y + c’*X + b_1*M_1 + b_2*M_2</p>
+<p>The specific indirect effect of X on Y through M_1 (controlling for M_2) is a_1*b_1. The specific indirect effect of <em>X</em> on <em>Y</em> through M_2 (controlling for M_1) is a_2*b_2. The specific indirect effect through M_1 and M_2 is a_1*i*b_2. The <strong>total indirect effect of <em>X</em> on <em>Y</em></strong> is the sum of all these, a_1*b_1 + a_2*b_2 + a_1*i*b_2. Adding this to c’ will give you the total effect, which is Y regressed on X alone.</p>
+<p>Fitting such a model in PROCESS is easy. We can do it with the following code (assuming the variable names are X, M1, M2, and Y, and the data frame they are stored in is called df):<br>
+process(data = df, x = “X”, m = c(“M1”,“M2”), y = “Y”, model = 6). model = 6 tells PROCESS we want a serial mediation model. It will assume the order we enter the variables in the m = c() command is the order of the chain (i.e., X-&gt;M1-&gt;M2-&gt;Y). We can set the seed by adding the <strong>seed = NUMBER</strong> command, which will help us reproduce the results if we run the code again.</p>
+<p><strong>Comparing Indirect Effects</strong></p>
+<p>One of the biggest strengths of multiple mediation models is the ability to compare specific indirect effects. This allows us to determine whether indirect effects are “stronger” than another. This is very easy to do, either manually in our bootstrapping algorithm, or even easier in PROCESS.</p>
+<p>If the indirect effects are the same sign, simply take the raw difference of the indirect effects. If the indirect effects are of different signs, you should take the difference of absolute values or compute the sum of the indirect effects.</p>
+<p>Simply add the <strong>contrast = 1</strong> command to compare indirect effects using the <strong>raw difference</strong> and <strong>contrast = 2</strong> to compared indirect effects using the <strong>difference of absolute values</strong>.</p>
+<section id="load-required-packages" class="level2">
+<h2 class="anchored" data-anchor-id="load-required-packages">Load required packages</h2>
+<p>You should load the jtools and ggplot2 packages. Be sure to also load PROCESS. (The code below will let my computer know where the process.R file is stored so it can manually retrieve and run the file while rendering. It will generate an error otherwise.)</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(jtools)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"E:/Macros/PROCESS/PROCESS v4.3 for R/process.R"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+********************* PROCESS for R Version 4.3.1 ********************* 
+ 
+           Written by Andrew F. Hayes, Ph.D.  www.afhayes.com              
+   Documentation available in Hayes (2022). www.guilford.com/p/hayes3   
+ 
+*********************************************************************** 
+ 
+PROCESS is now ready for use.
+Copyright 2020-2023 by Andrew F. Hayes ALL RIGHTS RESERVED
+Workshop schedule at http://haskayne.ucalgary.ca/CCRAM
+ </code></pre>
+</div>
+</div>
+</section>
+<section id="read-in-and-summarize-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="read-in-and-summarize-the-data">Read in and summarize the data</h2>
+<p>Our dataset today comes from a study on war veterans and their development of posttraumatic stress disorder (PTSD) returning home from deployment (Pitts et al., 2018). (This is the same data from last week.) The variables in this dataset are:</p>
+<ul>
+<li><p>ptsd: Self-reported PTSD symptomatology, higher scores = more PTSD (Range: -12.21, 70.52)</p></li>
+<li><p>dep: Self-reported depression levels, higher scores = more depression (Range: -9.642, 23.315)</p></li>
+<li><p>combat: Higher scores indicate more exposure to traumatic combat experiences (Range: -5.502, 26.033)</p></li>
+<li><p>pthreat: Perceived threat to life and concerns about safety, higher scores = more threat (Range: 11.92, 72.98)</p></li>
+<li><p>viewofd: Perceived benefits of deployment, higher score = more benefits (Range: 6.738, 38.779)</p></li>
+<li><p>sociald: Social desirability, higher score = greater inclination to appear socially desirable (Range: 0.0471, 17.495)</p></li>
+</ul>
+<p>Read in and summarize the data.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>warvet <span class="ot">&lt;-</span> <span class="fu">read.table</span>(<span class="at">file =</span> <span class="st">"E:/Teaching Materials/PSYC489K (MedMod)/Datasets/ptsd_vet.csv"</span>, <span class="at">sep =</span> <span class="st">","</span>, <span class="at">header =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># now summarize the data</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(warvet)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      ptsd             dep             combat          pthreat     
+ Min.   :-12.21   Min.   :-9.642   Min.   :-5.502   Min.   :11.92  
+ 1st Qu.: 19.95   1st Qu.: 1.790   1st Qu.: 5.381   1st Qu.:31.25  
+ Median : 28.71   Median : 5.437   Median : 9.427   Median :39.14  
+ Mean   : 28.28   Mean   : 5.350   Mean   : 9.510   Mean   :38.58  
+ 3rd Qu.: 36.45   3rd Qu.: 8.980   3rd Qu.:13.778   3rd Qu.:46.05  
+ Max.   : 70.52   Max.   :23.315   Max.   :26.033   Max.   :72.98  
+    viewofd          sociald        
+ Min.   : 6.738   Min.   : 0.04714  
+ 1st Qu.:21.623   1st Qu.: 6.56893  
+ Median :26.122   Median : 8.34985  
+ Mean   :25.740   Mean   : 8.29000  
+ 3rd Qu.:29.475   3rd Qu.:10.06628  
+ Max.   :38.779   Max.   :17.49508  </code></pre>
+</div>
+</div>
+</section>
+<section id="model-prep" class="level2">
+<h2 class="anchored" data-anchor-id="model-prep">Model Prep</h2>
+<p>Say we interested in determining whether traumatic experiences during combat (COMBAT) increased PTSD (PTSD), at least in part because they increased perceived threats to life (PTHREAT) and also increased perceived benefits of deployment (VIEWOFD). We also want to control for socially desirable response tendencies (SOCIALD).</p>
+</section>
+<section id="parallel-mediation-model" class="level2">
+<h2 class="anchored" data-anchor-id="parallel-mediation-model">Parallel Mediation Model</h2>
+<p>First, we will fit the model with the mediators in parallel. This means we will control for the correlation between perceived benefits of deployment and perceived threats of life (while also controlling for social desirability). By doing this, we are also assuming that neither of these variables causes the other. First, fit this model (either manually or in PROCESS). Also produce the appropriate contrasts between the specific indirect effects.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="do">##### manually </span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="co"># set bootstrap parameters</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>B <span class="ot">=</span> <span class="dv">5000</span> <span class="co"># number of resamples</span></span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1000</span>) <span class="co"># set seed to reproduce results</span></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>pind1_res <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, B) <span class="co"># empty results vector for IE 1</span></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>pind2_res <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>,B) <span class="co"># empty results vector for for IE 2 </span></span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>contrast_res <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, B) <span class="co"># empty contrast vector</span></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(warvet) <span class="co"># set sample size</span></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a><span class="co"># bootstrapping</span></span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>B){</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  boot_dat <span class="ot">&lt;-</span> warvet[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>n, n, <span class="at">replace =</span> <span class="cn">TRUE</span>),]</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>  boot_a1 <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(pthreat <span class="sc">~</span> combat <span class="sc">+</span> sociald, <span class="at">data=</span>boot_dat))[<span class="st">"combat"</span>]</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>  boot_a2 <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(viewofd <span class="sc">~</span> combat <span class="sc">+</span> sociald, <span class="at">data=</span>boot_dat))[<span class="st">"combat"</span>]</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>  boot_b1 <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(ptsd <span class="sc">~</span> combat <span class="sc">+</span> pthreat <span class="sc">+</span> viewofd <span class="sc">+</span> sociald, <span class="at">data=</span>boot_dat))[<span class="st">"pthreat"</span>]</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>  boot_b2 <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(ptsd <span class="sc">~</span> combat <span class="sc">+</span> pthreat <span class="sc">+</span> viewofd <span class="sc">+</span> sociald, <span class="at">data=</span>boot_dat))[<span class="st">"viewofd"</span>]</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>  pind1_res[i] <span class="ot">&lt;-</span> boot_a1<span class="sc">*</span>boot_b1 <span class="co"># ie through threat</span></span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>  pind2_res[i] <span class="ot">&lt;-</span> boot_a2<span class="sc">*</span>boot_b2 <span class="co"># ie through benefits</span></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>  contrast_res[i] <span class="ot">&lt;-</span> <span class="fu">abs</span>(pind1_res[i])<span class="sc">-</span><span class="fu">abs</span>(pind2_res[i]) <span class="co"># threat minus benefits</span></span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="co"># create and print CIs</span></span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"</span>); <span class="fu">quantile</span>(pind1_res, <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      2.5%      97.5% 
+0.05870865 0.27911055 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"</span>); <span class="fu">quantile</span>(pind2_res, <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       2.5%       97.5% 
+-0.13509838 -0.02485929 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"The 95% percentile bootstrap CI for the difference between the two indirect effects is:"</span>); <span class="fu">quantile</span>(contrast_res, <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The 95% percentile bootstrap CI for the difference between the two indirect effects is:"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       2.5%       97.5% 
+-0.04486605  0.23311894 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="do">##### process </span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="fu">process</span>(<span class="at">data =</span> warvet, <span class="at">x =</span> <span class="st">"combat"</span>, <span class="at">y =</span> <span class="st">"ptsd"</span>, <span class="at">m =</span> <span class="fu">c</span>(<span class="st">"pthreat"</span>,<span class="st">"viewofd"</span>), <span class="at">cov=</span><span class="st">"sociald"</span>, <span class="at">model =</span> <span class="dv">4</span>,<span class="at">contrast=</span><span class="dv">2</span>, <span class="at">seed =</span> <span class="dv">42</span>, <span class="at">total =</span> <span class="dv">1</span>,<span class="at">progress=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+********************* PROCESS for R Version 4.3.1 ********************* 
+ 
+           Written by Andrew F. Hayes, Ph.D.  www.afhayes.com              
+   Documentation available in Hayes (2022). www.guilford.com/p/hayes3   
+ 
+*********************************************************************** 
+               
+Model : 4      
+    Y : ptsd   
+    X : combat 
+   M1 : pthreat
+   M2 : viewofd
+
+Covariates: 
+       sociald
+
+Sample size: 324
+
+Custom seed: 42
+
+
+*********************************************************************** 
+Outcome Variable: pthreat
+
+Model Summary: 
+          R      R-sq       MSE         F       df1       df2         p
+     0.4228    0.1787   86.8231   34.9273    2.0000  321.0000    0.0000
+
+Model: 
+             coeff        se         t         p      LLCI      ULCI
+constant   36.3106    1.9632   18.4958    0.0000   32.4483   40.1730
+combat      0.6909    0.0914    7.5625    0.0000    0.5111    0.8706
+sociald    -0.5188    0.1918   -2.7051    0.0072   -0.8961   -0.1415
+
+*********************************************************************** 
+Outcome Variable: viewofd
+
+Model Summary: 
+          R      R-sq       MSE         F       df1       df2         p
+     0.3703    0.1371   29.0071   25.5048    2.0000  321.0000    0.0000
+
+Model: 
+             coeff        se         t         p      LLCI      ULCI
+constant   17.9348    1.1347   15.8053    0.0000   15.7024   20.1673
+combat      0.1898    0.0528    3.5939    0.0004    0.0859    0.2937
+sociald     0.7238    0.1108    6.5299    0.0000    0.5057    0.9419
+
+*********************************************************************** 
+Outcome Variable: ptsd
+
+Model Summary: 
+          R      R-sq       MSE         F       df1       df2         p
+     0.5240    0.2746  125.2868   30.1819    4.0000  319.0000    0.0000
+
+Model: 
+             coeff        se         t         p      LLCI      ULCI
+constant   38.3966    4.3417    8.8437    0.0000   29.8546   46.9385
+combat      0.3352    0.1238    2.7084    0.0071    0.0917    0.5786
+pthreat     0.2347    0.0689    3.4060    0.0007    0.0991    0.3702
+viewofd    -0.3781    0.1192   -3.1720    0.0017   -0.6126   -0.1436
+sociald    -1.5229    0.2457   -6.1982    0.0000   -2.0064   -1.0395
+
+************************ TOTAL EFFECT MODEL *************************** 
+Outcome Variable: ptsd
+
+Model Summary: 
+          R      R-sq       MSE         F       df1       df2         p
+     0.4589    0.2106  135.4825   42.8180    2.0000  321.0000    0.0000
+
+Model: 
+             coeff        se         t         p      LLCI      ULCI
+constant   40.1363    2.4524   16.3664    0.0000   35.3115   44.9610
+combat      0.4255    0.1141    3.7290    0.0002    0.2010    0.6500
+sociald    -1.9184    0.2396   -8.0078    0.0000   -2.3897   -1.4470
+
+*********************************************************************** 
+Bootstrapping in progress. Please wait.
+
+************ TOTAL, DIRECT, AND INDIRECT EFFECTS OF X ON Y ************
+
+Total effect of X on Y:
+     effect        se         t         p      LLCI      ULCI
+     0.4255    0.1141    3.7290    0.0002    0.2010    0.6500
+
+Direct effect of X on Y:
+     effect        se         t         p      LLCI      ULCI
+     0.3352    0.1238    2.7084    0.0071    0.0917    0.5786
+
+Indirect effect(s) of X on Y:
+           Effect    BootSE  BootLLCI  BootULCI
+TOTAL      0.0904    0.0698   -0.0424    0.2315
+pthreat    0.1621    0.0563    0.0596    0.2787
+viewofd   -0.0717    0.0284   -0.1329   -0.0235
+(C1)       0.0904    0.0698   -0.0424    0.2315
+
+Specific indirect effect contrast definition(s):
+(C1)     pthreat   minus    viewofd
+
+Contrasts are differences between absolute values of indirect effects
+
+******************** ANALYSIS NOTES AND ERRORS ************************ 
+
+Level of confidence for all confidence intervals in output: 95
+
+Number of bootstraps for percentile bootstrap confidence intervals: 5000</code></pre>
+</div>
+</div>
+<p><strong>Report the results of this model. What can we say about the indirect effects individually?</strong></p>
+<p>There was an overall effect of combat on PTSD symptoms, controlling for social desirability (<em>c</em> = 0.43, t = 3.73, p &lt; .001). Those who experienced more traumatic events in combat perceived significantly more threats to their life, holding social desirability constant (a_1 = 0.69, t = 7.56, p &lt;. 001). They also perceived more benefits to their deployment (a_2 = 0.72, t = 6.53, p &lt; .001). As one perceived more threats to their life, they reported more PTSD symptoms (b1 = 0.23, t = 3.41, p &lt; .001) controlling for combat experiences and social desirability. For people equal on combat experiences, perceived threat, and social desirability, the more benefits from deployment one perceived, the fewer PTSD symptoms they had (b2 = -0.38, t = -3.17, p = .002). After accounting for all the mechanisms above, there was still a significant effect of perceived threat on PTSD symptoms (c’= 0.34, t = 3.41, p = .007).</p>
+<p><strong>Which contrast should we conduct? What are the results of this test?</strong></p>
+<p>We should use the difference of absolute values (contrast = 2 in PROCESS) or compute the sum of the indirect effects since they are of different signs. If we simply computed the raw difference between the indirect effects, we would not be comparing their magnitude/distance from zero since one is positive and one is negative.</p>
+<p>The result of the contrast is: |0.1621|-|-0.0717|=0.0904, 95% percentile bootstrap CI = [-0.042, 0.232]. We cannot conclude these two indirect effects are different in magnitude from one another because 0 is in the confidence interval.</p>
+</section>
+<section id="serial-mediation-model" class="level2">
+<h2 class="anchored" data-anchor-id="serial-mediation-model">Serial Mediation Model</h2>
+<p>Now, we will fit the model with the mediators in serial. This means we are assuming one of the mediators is causing the other after being caused by the predictor (while controlling for social desirability). First, fit this model (either manually or in PROCESS). Consider which mediator should be in which position and be prepared to justify your response. Also produce the contrasts between the specific indirect effects.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="do">##### manually </span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="co"># set bootstrap parameters</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>B <span class="ot">=</span> <span class="dv">5000</span> <span class="co"># number of resamples</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1000</span>) <span class="co"># allows us to reproduce results </span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>pind1_res <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, B) <span class="co"># indirect effect 1 results vector</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>pind2_res <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>,B) <span class="co"># indirect effect 2 results vector</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>pind3_res <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>,B) <span class="co"># indirect effect 3 results vector</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>contrast_13_res <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, B) <span class="co"># contrast 1 results vector</span></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>contrast_12_res <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, B) <span class="co"># contrast 2 results vector</span></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>contrast_23_res <span class="ot">&lt;-</span> <span class="fu">rep</span>(<span class="cn">NA</span>, B) <span class="co"># contrast 3 results vector</span></span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="fu">nrow</span>(warvet) <span class="co"># set sample size</span></span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="co"># bootstrapping</span></span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span>(i <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>B){</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>  boot_dat <span class="ot">&lt;-</span> warvet[<span class="fu">sample</span>(<span class="dv">1</span><span class="sc">:</span>n, n, <span class="at">replace =</span> <span class="cn">TRUE</span>),]</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>  boot_a1 <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(pthreat <span class="sc">~</span> combat <span class="sc">+</span> sociald, <span class="at">data=</span>boot_dat))[<span class="st">"combat"</span>]</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>  boot_a2 <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(viewofd <span class="sc">~</span> combat <span class="sc">+</span> sociald <span class="sc">+</span> pthreat, <span class="at">data=</span>boot_dat))[<span class="st">"combat"</span>]</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>  boot_i <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(viewofd <span class="sc">~</span> combat <span class="sc">+</span> sociald <span class="sc">+</span> pthreat, <span class="at">data=</span>boot_dat))[<span class="st">"pthreat"</span>]</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>  boot_b1 <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(ptsd <span class="sc">~</span> combat <span class="sc">+</span> pthreat <span class="sc">+</span> viewofd <span class="sc">+</span> sociald, <span class="at">data=</span>boot_dat))[<span class="st">"pthreat"</span>]</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a>  boot_b2 <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">lm</span>(ptsd <span class="sc">~</span> combat <span class="sc">+</span> pthreat <span class="sc">+</span> viewofd <span class="sc">+</span> sociald, <span class="at">data=</span>boot_dat))[<span class="st">"viewofd"</span>]</span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>  pind1_res[i] <span class="ot">&lt;-</span> boot_a1<span class="sc">*</span>boot_b1 <span class="co"># ie through threat</span></span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>  pind2_res[i] <span class="ot">&lt;-</span> boot_a2<span class="sc">*</span>boot_b2 <span class="co"># ie through benefits</span></span>
+<span id="cb16-23"><a href="#cb16-23" aria-hidden="true" tabindex="-1"></a>  pind3_res[i] <span class="ot">&lt;-</span> boot_a1<span class="sc">*</span>boot_i<span class="sc">*</span>boot_b2 <span class="co"># serial IE</span></span>
+<span id="cb16-24"><a href="#cb16-24" aria-hidden="true" tabindex="-1"></a>  contrast_13_res[i] <span class="ot">&lt;-</span> pind1_res[i]<span class="sc">-</span>pind3_res[i] <span class="co"># threat minus serial IE</span></span>
+<span id="cb16-25"><a href="#cb16-25" aria-hidden="true" tabindex="-1"></a>  contrast_12_res[i] <span class="ot">&lt;-</span> <span class="fu">abs</span>(pind1_res[i])<span class="sc">-</span><span class="fu">abs</span>(pind2_res[i]) <span class="co"># benefits minus threat</span></span>
+<span id="cb16-26"><a href="#cb16-26" aria-hidden="true" tabindex="-1"></a>  contrast_23_res[i] <span class="ot">&lt;-</span> <span class="fu">abs</span>(pind2_res[i])<span class="sc">-</span><span class="fu">abs</span>(pind3_res[i]) <span class="co"># benefits minus serial IE</span></span>
+<span id="cb16-27"><a href="#cb16-27" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb16-28"><a href="#cb16-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-29"><a href="#cb16-29" aria-hidden="true" tabindex="-1"></a><span class="do">### create and print CIs</span></span>
+<span id="cb16-30"><a href="#cb16-30" aria-hidden="true" tabindex="-1"></a><span class="do">### specific IEs</span></span>
+<span id="cb16-31"><a href="#cb16-31" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"</span>); <span class="fu">quantile</span>(pind1_res, <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      2.5%      97.5% 
+0.05870865 0.27911055 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"</span>); <span class="fu">quantile</span>(pind2_res, <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The 95% percentile bootstrap CI for the specific indirect effect through perceived threat is:"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       2.5%       97.5% 
+-0.18780685 -0.04280968 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"The 95% percentile bootstrap CI for the serial indirect effect is:"</span>); <span class="fu">quantile</span>(pind3_res, <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The 95% percentile bootstrap CI for the serial indirect effect is:"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      2.5%      97.5% 
+0.01124175 0.06881154 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="do">### contrasts</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"The 95% percentile bootstrap CI for the difference between the effect through threats and the serial indirect effect is:"</span>); <span class="fu">quantile</span>(contrast_13_res, <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The 95% percentile bootstrap CI for the difference between the effect through threats and the serial indirect effect is:"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      2.5%      97.5% 
+0.01482797 0.24986665 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"The 95% percentile bootstrap CI for the difference in absolute values between the effect through threats to life and benefits of deployment is:"</span>); <span class="fu">quantile</span>(contrast_12_res, <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The 95% percentile bootstrap CI for the difference in absolute values between the effect through threats to life and benefits of deployment is:"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       2.5%       97.5% 
+-0.09098894  0.20600204 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">paste</span>(<span class="st">"The 95% percentile bootstrap CI for the difference in aboslute values between the effect through benefits and the serial indirect effect is:"</span>); <span class="fu">quantile</span>(contrast_23_res, <span class="fu">c</span>(.<span class="dv">025</span>, .<span class="dv">975</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "The 95% percentile bootstrap CI for the difference in aboslute values between the effect through benefits and the serial indirect effect is:"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>      2.5%      97.5% 
+0.02485929 0.13509838 </code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">process</span>(<span class="at">data=</span>warvet, <span class="at">x =</span> <span class="st">"combat"</span>, <span class="at">m =</span> <span class="fu">c</span>(<span class="st">"pthreat"</span>,<span class="st">"viewofd"</span>), <span class="at">y =</span> <span class="st">"ptsd"</span>, <span class="at">cov =</span> <span class="st">"sociald"</span>, <span class="at">model =</span> <span class="dv">6</span>, <span class="at">seed =</span> <span class="dv">42</span>, <span class="at">contrast =</span> <span class="dv">2</span>, <span class="at">total =</span> <span class="dv">1</span>,<span class="at">progress=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+********************* PROCESS for R Version 4.3.1 ********************* 
+ 
+           Written by Andrew F. Hayes, Ph.D.  www.afhayes.com              
+   Documentation available in Hayes (2022). www.guilford.com/p/hayes3   
+ 
+*********************************************************************** 
+               
+Model : 6      
+    Y : ptsd   
+    X : combat 
+   M1 : pthreat
+   M2 : viewofd
+
+Covariates: 
+       sociald
+
+Sample size: 324
+
+Custom seed: 42
+
+
+*********************************************************************** 
+Outcome Variable: pthreat
+
+Model Summary: 
+          R      R-sq       MSE         F       df1       df2         p
+     0.4228    0.1787   86.8231   34.9273    2.0000  321.0000    0.0000
+
+Model: 
+             coeff        se         t         p      LLCI      ULCI
+constant   36.3106    1.9632   18.4958    0.0000   32.4483   40.1730
+combat      0.6909    0.0914    7.5625    0.0000    0.5111    0.8706
+sociald    -0.5188    0.1918   -2.7051    0.0072   -0.8961   -0.1415
+
+*********************************************************************** 
+Outcome Variable: viewofd
+
+Model Summary: 
+          R      R-sq       MSE         F       df1       df2         p
+     0.4275    0.1828   27.5576   23.8591    3.0000  320.0000    0.0000
+
+Model: 
+             coeff        se         t         p      LLCI      ULCI
+constant   22.7635    1.5896   14.3199    0.0000   19.6360   25.8909
+combat      0.2816    0.0559    5.0415    0.0000    0.1717    0.3915
+pthreat    -0.1330    0.0314   -4.2290    0.0000   -0.1948   -0.0711
+sociald     0.6548    0.1093    5.9930    0.0000    0.4399    0.8698
+
+*********************************************************************** 
+Outcome Variable: ptsd
+
+Model Summary: 
+          R      R-sq       MSE         F       df1       df2         p
+     0.5240    0.2746  125.2868   30.1819    4.0000  319.0000    0.0000
+
+Model: 
+             coeff        se         t         p      LLCI      ULCI
+constant   38.3966    4.3417    8.8437    0.0000   29.8546   46.9385
+combat      0.3352    0.1238    2.7084    0.0071    0.0917    0.5786
+pthreat     0.2347    0.0689    3.4060    0.0007    0.0991    0.3702
+viewofd    -0.3781    0.1192   -3.1720    0.0017   -0.6126   -0.1436
+sociald    -1.5229    0.2457   -6.1982    0.0000   -2.0064   -1.0395
+
+************************ TOTAL EFFECT MODEL *************************** 
+Outcome Variable: ptsd
+
+Model Summary: 
+          R      R-sq       MSE         F       df1       df2         p
+     0.4589    0.2106  135.4825   42.8180    2.0000  321.0000    0.0000
+
+Model: 
+             coeff        se         t         p      LLCI      ULCI
+constant   40.1363    2.4524   16.3664    0.0000   35.3115   44.9610
+combat      0.4255    0.1141    3.7290    0.0002    0.2010    0.6500
+sociald    -1.9184    0.2396   -8.0078    0.0000   -2.3897   -1.4470
+
+*********************************************************************** 
+Bootstrapping in progress. Please wait.
+
+************ TOTAL, DIRECT, AND INDIRECT EFFECTS OF X ON Y ************
+
+Total effect of X on Y:
+     effect        se         t         p      LLCI      ULCI
+     0.4255    0.1141    3.7290    0.0002    0.2010    0.6500
+
+Direct effect of X on Y:
+     effect        se         t         p      LLCI      ULCI
+     0.3352    0.1238    2.7084    0.0071    0.0917    0.5786
+
+Indirect effect(s) of X on Y:
+         Effect    BootSE  BootLLCI  BootULCI
+TOTAL    0.0904    0.0698   -0.0424    0.2315
+Ind1     0.1621    0.0563    0.0596    0.2787
+Ind2    -0.1065    0.0372   -0.1846   -0.0422
+Ind3     0.0347    0.0148    0.0115    0.0690
+(C1)     0.0556    0.0743   -0.0891    0.2029
+(C2)     0.1274    0.0589    0.0163    0.2480
+(C3)     0.0717    0.0284    0.0235    0.1329
+
+Specific indirect effect contrast definition(s):
+(C1)     Ind1   minus    Ind2
+(C2)     Ind1   minus    Ind3
+(C3)     Ind2   minus    Ind3
+
+Contrasts are differences between absolute values of indirect effects
+
+Indirect effect key:
+Ind1 combat    -&gt;    pthreat    -&gt;    ptsd              
+Ind2 combat    -&gt;    viewofd    -&gt;    ptsd              
+Ind3 combat    -&gt;    pthreat    -&gt;    viewofd    -&gt;    ptsd
+
+******************** ANALYSIS NOTES AND ERRORS ************************ 
+
+Level of confidence for all confidence intervals in output: 95
+
+Number of bootstraps for percentile bootstrap confidence intervals: 5000</code></pre>
+</div>
+</div>
+<p><strong>Which mediator did you put first and second? Why?</strong></p>
+<p>I chose to put perceived threats to live first. To me, it seems plausible that the more threats to their life one perceives, the fewer benefits they will find to being deployed. This will, in turn, increase their PTSD symptoms. (There is no clear answer to this question. Since we don’t know the truth, it’s based on your argument. That’s not to say there aren’t <em>poor</em> answers, but you can argue against this position and <em>potentially</em> be right.)</p>
+<p><strong>Report the results of this model. What can we say about the indirect effects individually?</strong></p>
+<p>There was an overall effect of combat on PTSD symptoms, controlling for social desirability (<em>c</em> = 0.43, t = 3.73, p &lt; .001). Those who experienced more traumatic events in combat perceived significantly more threats to their life, holding social desirability constant (a_1 = 0.69, t = 7.56, p &lt;. 001). They also perceived more benefits to their deployment assuming they have the same social desirability (a_2 = 0.28, t = 5.04, p &lt;. 001). As one perceived more threats to their life, they perceived significantly <em>fewer</em> benefits of their deployment (i = -0.13, t = -4.23, p &lt;. 001) and more PTSD symptoms (b1 = 0.23, t = 3.41, p &lt;. 001) controlling for combat experiences and social desirability. For people equal on combat experiences, perceived threat, and social desirability, the more benefits from deployment one perceived, the fewer PTSD symptoms they had (b_2 = -0.38, t = -3.17, p = . 002). After accounting for all the mechanisms above, there was still a significant effect of perceived threat on PTSD symptoms (c’= 0.34, t = 3.41, p = .007).</p>
+<p><strong>Which contrast(s) should we conduct? What are the results of this test?</strong></p>
+<p>For indirect effects 1 and 3 (the effect through perceived threats alone and perceived threats then perceived benefits, respectively), we would use the raw difference because they are the same sign. However, we should use the difference of absolute values or the sum for the contrast between the effect through perceived benefits alone to the other two because the effect through benefits is negative, whereas the others are positive. The results are below:</p>
+<p>Note: Ind 1 = effect through perceived threat alone, Ind2 = effect through perceived benefits alone, Ind3 = effect through perceived threat <em>then</em> benefits.</p>
+<p>Ind1 - Ind2 = 0.06, 95% percentile bootstrap CI = [-0.09, 0.20]. CONTRAST = 2 in PROCESS</p>
+<p>Ind1 - Ind3 = 0.13, 95% percentile bootstrap CI = [0.02, 0.25]. CONTRAST = 1 in PROCESS</p>
+<p>Ind2 - Ind3 = 0.07, 95% percentile bootstrap CI = [0.02, 0.13]. CONTRAST = 2 in PROCESS</p>
+<p>The effect through perceived threat alone is significantly stronger than the indirect effect through threat then benefits of deployment (because the confidence interval for the difference did not contain zero). The effect through perceived benefits of deployment was also significantly stronger than the indirect effect through perceived threat then benefits because zero was not in that confidence interval. However, the effect through perceived benefits alone was not different from the effect through perceived threat alone.</p>
+</section>
+<section id="model-selection" class="level2">
+<h2 class="anchored" data-anchor-id="model-selection">Model Selection</h2>
+<p>Which model is better? Why? You may consider statistical results in this evaluation, but recall that theory is more important.</p>
+<p>I believe that the parallel mediation model is better for a few reasons: 1.) I provided an argument for putting perceived threat first, but it can just as well be the case that those who perceive more benefits from their deployment perceive fewer threats to their life, which decreases PTSD. Without prior research positioning these variables, it’s hard to compare these two models. 2.) The parallel mediation model is easier to understand, and parsimony is a good tie breaker.</p>
+</section>
+<section id="data-visualization" class="level2">
+<h2 class="anchored" data-anchor-id="data-visualization">Data Visualization</h2>
+<p>Visualize each path of your chosen model.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="co"># a1</span></span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span> warvet, <span class="fu">aes</span>(<span class="at">x=</span> combat, <span class="at">y =</span>pthreat)) <span class="sc">+</span> </span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>  jtools<span class="sc">::</span><span class="fu">theme_apa</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="mediation_script_sync_session_3_COMPLETE_files/figure-html/unnamed-chunk-5-1.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="co"># b1</span></span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span> warvet, <span class="fu">aes</span>(<span class="at">x=</span>pthreat, <span class="at">y =</span> ptsd)) <span class="sc">+</span> </span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>  jtools<span class="sc">::</span><span class="fu">theme_apa</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="mediation_script_sync_session_3_COMPLETE_files/figure-html/unnamed-chunk-5-2.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># a2</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span> warvet, <span class="fu">aes</span>(<span class="at">x=</span>combat, <span class="at">y =</span> viewofd)) <span class="sc">+</span> </span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  jtools<span class="sc">::</span><span class="fu">theme_apa</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="mediation_script_sync_session_3_COMPLETE_files/figure-html/unnamed-chunk-5-3.png" class="img-fluid" width="672"></p>
+</div>
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="co"># b2</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="fu">ggplot</span>(<span class="at">data=</span> warvet, <span class="fu">aes</span>(<span class="at">x=</span>viewofd, <span class="at">y =</span> ptsd)) <span class="sc">+</span> </span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_point</span>() <span class="sc">+</span> </span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>  jtools<span class="sc">::</span><span class="fu">theme_apa</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="mediation_script_sync_session_3_COMPLETE_files/figure-html/unnamed-chunk-5-4.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+</section>
+<section id="statistical-diagram" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-diagram">Statistical Diagram</h2>
+<p>Create a complete statistical diagram with all pertinent information (paths, <em>p</em>-values, scatterplots). Make this ready for production.</p>
+<p>This is available on ELMS!</p>
+<p>End of script</p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

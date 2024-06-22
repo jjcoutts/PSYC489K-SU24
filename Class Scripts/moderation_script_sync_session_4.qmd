@@ -1,0 +1,168 @@
+---
+title: "PSYC489K, Session 4: Simple Moderation Analysis"
+format: html
+editor: visual
+---
+
+# Moderation
+
+Moderation analysis allows us to uncover the "when" and "for whom" qualifying a causal effect. In other words, it can tell us the boundary conditions of an effect—when it is positive versus negative, present versus not, or stronger versus weaker. Most, if not all effects, are moderated. It is common for a relationship to vary as a function of gender, race, presence of a psychological disorder, or level of some continuous factor (e.g., age or mg of a drug). As we'll see, the testing of moderation is actually quite simple. (It's just multiple regression.) It is the interpretation of moderated (aka "interaction") effects that can become challenging.
+
+**Equation**
+
+As mentioned previously, a simple moderation model is just a simple multiple regression equation with one new parameter (to us):
+
+*Y* = dy + b1*X* + b2*W* + b3*X*\**W*
+
+Note: We represent moderators with W to avoid confusion with mediators/mediation. The only new thing here is the product of *X* and *W*, which carries the interaction effect. All we need to do is test the weight for this effect, b3, to determine whether moderation is present. This can be done with typical regression procedures. (i.e., We don't need to use bootstrapping, Monte Carlo, or anything else fancy.)
+
+## Load required packages
+
+You should load the **jtools** and **ggplot2** packages. Be sure to also load PROCESS. (The code below will let my computer know where the process.R file is stored so it can manually retrieve and run the file while rendering. It will generate an error otherwise.)
+
+```{r}
+
+# remember to load process
+
+```
+
+## Read in and summarize the data
+
+Our data today come from a study on Palestinian children experiencing traumatic events during the Al-Aqsa Intifada on the Gaza strip in 2006 (Peltonen et al., 2010). These data have been generated to produce identical results to the original study. A total of 113 children were measured on a variety of constructs including:
+
+-   **age:** The age of the child in years. (Range: 10-14)
+
+-   **depress:** Self-reported depression levels, higher scores = more depression. (Range: 1-28)
+
+-   **trauma:** Number of traumatic events experienced (e.g., house exploding, witnessing a death), higher scores = more trauma. (Range: 0-18)
+
+-   **lonely:** Self-reported loneliness. Higher scores = more loneliness. (Range: 1-5)
+
+-   **ptsd:** Self-reported PTSD symptoms. Higher scores = more symptoms. (Range: 0-54)
+
+Our hypothesis is that loneliness the relationship between PTSD and depression. Specifically, X = ptsd, W = lonely, and Y = depression.
+
+Read in and summarize the data.
+
+```{r}
+
+# now summarize the data
+
+```
+
+## Fitting the Model
+
+First, we will fit the model to the data and test whether the interaction is significant. Then, we will follow up this inferential test by probing the interaction effect to better understand the dynamics of the relationship.
+
+```{r}
+
+```
+
+**Is the interaction effect significant? What can we say about this relationship?**
+
+b1:
+
+b2:
+
+b3:
+
+description...
+
+## The Simple Slopes Procedure
+
+We will first probe the model with the simple slopes procedure. This allows us to test the conditional effect of the predictor at different values of the moderator. It also allows us to create a nice, simple visualization. To keep things simple, we're just going to probe the interaction at the mean +/- one SD of the moderator.
+
+```{r}
+# do it manually or via PROCESS
+
+## creating the visualization
+ggplot(data=DF) + # lets ggplot know the data frame we're working with
+  geom_line(aes(x=X,y=Y,color=W)) + # create lines
+  geom_point(aes(x=X, y=Y, color=W)) + # add dots at end of lines
+  theme_bw() + # this makes it neat and tidy
+  theme(panel.grid.major = element_blank(), # start theme code, remove grid
+        panel.grid.minor = element_blank(), # remove grid
+        panel.background = element_rect(color="black"), # remove background
+        axis.title.x = element_text(hjust=.5), # center x axis title
+        axis.title.y = element_text(hjust=.5), # center y axis title
+        axis.line = element_line(), # add axis lines
+        legend.background = element_rect(color="black")) + # end theme code
+  guides(color=guide_legend(title="MODERATOR VARIABLE (W)")) +
+  scale_color_manual(values=c("#F8766D","#00BA38","#619CFF")) +
+  labs(x="LABEL",y="LABEL") # relabel axes
+```
+
+## The Johnson-Neyman Technique
+
+The JN technique (aka floodlight analysis) tells us at what value(s) of a continuous moderator the effect of the focal predictor on the outcome becomes significant. We can use the quadratic formula to derive these points, but PROCESS thankfully does this for us. All you need to do is add **jn=1** to the PROCESS command.
+
+\*Note: PROCESS will only show you valid solutions. (i.e., No imaginary numbers and only values that fit in the observed range of the moderator.)
+
+```{r}
+## doing it in PROCESS - we're going to keep it easy
+
+# JN via process
+jnres <- process(data = child_trauma, x = ,w = , y = , model = , plot = , jn = , moments =  , save = 2)
+
+perfx <- jnres[12:33,1];effex <- jnres[12:33,2];llciex <- jnres[12:33,6];ulciex <- jnres[12:33,7]
+# J-N plot
+plot(x=perfx,y=effex,type="l",pch=19,lwd=3,col="black",ylab="Conditional Effect of PTSD",xlab="Loneliness (W)")
+points(perfx,llciex,lwd=1.75,lty=2,type="l",col="red")
+points(perfx,ulciex,lwd=1.75,lty=2,type="l",col="red")
+abline(h=0,untf=FALSE,lty=3,lwd=1)
+abline(v=3.313,untf=FALSE,lty=3,lwd=1)
+text(3.5,.1,"3.31",cex=.8)
+```
+
+description...
+
+## A Complex Visualization
+
+This is a complex visualization that combines the simple slopes and JN techniques. It is not going to be expected you can recreate this, because it involves some pretty complex visualization code. But I will show this code to you multiple times in different situations so you become more familiar with it!
+
+```{r}
+## new graph, combination of scatterplot, simple slopes, and J-N
+simpmod <- lm(data=child_trauma,Y~W*X)
+b0 <- coef(simpmod)[1];b1 <- coef(simpmod)[2];b2 <- coef(simpmod)[3];b3 <- coef(simpmod)[4]
+# simple slope/intercept for low values of moderator
+sintlow <- b0 + b2*(mean(child_trauma$W)-sd(child_trauma$W));sslolow <- b1 + b3*(mean(child_trauma$W)-sd(child_trauma$W))
+# simple slope/intercept for average values of moderator
+sintmed <- b0 + b2*(mean(child_trauma$W));sslomed <- b1 + b3*(mean(child_trauma$W))
+# simple slope/intercept for high values of moderator
+sinthigh <- b0 + b2*(mean(child_trauma$W)+sd(child_trauma$W));sslohigh <- b1 + b3*(mean(child_trauma$W)+sd(child_trauma$W))
+# input region of sig
+sintsig1 <- b0 + b2*(REGION);sslosig1 <- b1 + b3*(REGION)
+# create variable identifying data in region
+child_trauma$modinROS = as.factor(as.numeric(child_trauma$lonely >= REGION))
+
+# new visual with all the bells and whistles
+ggplot() + 
+  geom_point(data=child_trauma,aes(y=Y,x=X,color=modinROS)) + # add points and color by factor
+  geom_rug(data=child_trauma, aes(y=Y,x=X),outside=TRUE,sides="tr", position = "jitter") + # allows for rug plot
+  coord_cartesian(clip = "off") + # allows for rug plot
+  geom_abline(slope=sslolow,intercept=sintlow,color="#031D38", size = 1) + # slope at low levels
+  geom_abline(slope=sslomed,intercept=sintmed,color="#346E9D", size = 1) + # slope at medium levels
+  geom_abline(slope=sslohigh,intercept=sinthigh,color="#55AEF3", size = 1) + # slope at high levels
+  geom_abline(slope=sslosig1,intercept=sintsig1,color="black",linetype="dotted", size =1) + # add region 1
+  theme_bw() +
+  scale_color_manual(name="MODERATOR NAME (W)", labels = c("Not in ROS","ROS"), values = c("red2","green4")) + 
+  scale_x_continuous(expand = expansion(mult=.005)) +
+  scale_y_continuous(expand = expansion(mult=.005)) + 
+  theme(panel.grid.major = element_blank(), # remove grid
+        panel.grid.minor = element_blank(), # remove grid
+        panel.background = element_rect(color="black"), # remove background
+        axis.title.x = element_text(hjust=.5), # center x axis title
+        axis.title.y = element_text(hjust=.5), # center y axis title
+        axis.line = element_line(),
+        legend.background = element_rect(color="black")) + # add axis lines, end theme adjustments
+  labs(x="X VARIABLE",y="Y VARIABLE") + # relabel axes
+  annotate(geom="text",size=4, x=26,y=25,label="XX% of data in region of significance") # add in ROS info
+```
+
+description...
+
+## Summary
+
+*Tie everything together. What did we learn?*
+
+End of script
